@@ -1,19 +1,25 @@
 import h5py
+import sys
 
 
 def view_attribute(file_path, target_path, attr_name=None):
-    try:
-        with h5py.File(file_path, "r") as file:
+    with h5py.File(file_path, "r") as file:
+        if target_path in file:
             target = file[target_path]
             if attr_name:
-                print(f"{attr_name}: {target.attrs[attr_name]}")
+                if attr_name in target.attrs:
+                    attr_value = target.attrs[attr_name]
+                    print(f"{attr_name}: {attr_value}")
+                else:
+                    print(
+                        f"Error: '{attr_name}' does not exist in '{target_path}'.",
+                        file=sys.stderr,
+                    )
             else:
                 for key, value in target.attrs.items():
                     print(f"{key}: {value}")
-    except KeyError as e:
-        print(f"Error: Attribute {e} not found.")
-    except Exception as e:
-        print(f"Error: {e}")
+        else:
+            print(f"Error: '{target_path}' does not exist.", file=sys.stderr)
 
 
 def explore_hdf5(group, indent="|-- "):
@@ -45,4 +51,4 @@ def explore_tree(file_path):
         with h5py.File(file_path, "r") as file:
             explore_hdf5(file)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}", file=sys.stderr)
