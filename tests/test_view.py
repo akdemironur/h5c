@@ -1,5 +1,6 @@
 import pytest
 import h5py
+import numpy as np
 from h5c.view import view_attribute, explore_hdf5
 from .test_mock_hdf5 import mock_hdf5_file
 
@@ -10,25 +11,19 @@ def mock_hdf5_file(tmp_path):
     file_path = tmp_path / "test.h5"
     with h5py.File(file_path, "w") as file:
         grp = file.create_group("my_group")
-        grp.attrs.create("my_attr", 1)  # Attribute with integer value
-        grp.attrs.create(
-            "my_string_attr", "Hello, World!"
-        )  # Attribute with string value
-        grp.attrs.create("my_float_attr", 3.14)  # Attribute with float value
-        grp.attrs.create("my_bool_attr", True)  # Attribute with boolean value
-        grp.attrs.create("my_double_attr", 2.71828)  # Attribute with double value
+        grp.attrs.create("my_attr", np.int64(1))
+        grp.attrs.create("my_string_attr", "Hello, World!")
+        grp.attrs.create("my_float_attr", np.float32(3.14))
+        grp.attrs.create("my_bool_attr", np.bool(True))
+        grp.attrs.create("my_double_attr", np.float64(2.71828))
 
-        # Create a subgroup
         subgrp = grp.create_group("my_subgroup")
         subgrp.attrs.create("subgroup_attr", "Subgroup Attribute")
-        subgrp.attrs.create("subgroup_attr_int", 1)
+        subgrp.attrs.create("subgroup_attr_int", np.int32(1))
 
-        # Create a dataset
-        dataset = grp.create_dataset("my_dataset", shape=(10,), dtype="int")
+        dataset = grp.create_dataset("my_dataset", shape=(10,), dtype="int64")
         dataset.attrs.create("dataset_attr", "Dataset Attribute")
-        dataset.attrs.create(
-            "dataset_double_attr", 3.14159
-        )  # Attribute with double value
+        dataset.attrs.create("dataset_double_attr", np.float64(3.14159))
 
     return file_path
 
@@ -133,23 +128,37 @@ def test_explore_hdf5(capsys, mock_hdf5_file):
     captured = capsys.readouterr()
 
     assert "|-- Group: /my_group" in captured.out
-    assert "|   |-- Attribute: my_attr (int64): 1" in captured.out
+    assert (
+        f"|   |-- Attribute: my_attr ({type(np.int64(1)).__name__}): 1" in captured.out
+    )
     assert "|   |-- Attribute: my_string_attr (str): Hello, World!" in captured.out
-    assert "|   |-- Attribute: my_float_attr (float32): 3.14" in captured.out
-    assert "|   |-- Attribute: my_bool_attr (bool_): True" in captured.out
-    assert "|   |-- Attribute: my_double_attr (float64): 2.71828" in captured.out
+    assert (
+        f"|   |-- Attribute: my_float_attr ({type(np.float32(3.14)).__name__}): 3.14"
+        in captured.out
+    )
+    assert (
+        f"|   |-- Attribute: my_bool_attr ({type(np.bool_(True)).__name__}): True"
+        in captured.out
+    )
+    assert (
+        f"|   |-- Attribute: my_double_attr ({type(np.float64(2.71828)).__name__}): 2.71828"
+        in captured.out
+    )
     assert "|   |-- Group: /my_group/my_subgroup" in captured.out
     assert (
         "|   |   |-- Attribute: subgroup_attr (str): Subgroup Attribute" in captured.out
     )
-    assert "|   |   |-- Attribute: subgroup_attr_int (int32): 1" in captured.out
+    assert (
+        f"|   |   |-- Attribute: subgroup_attr_int ({type(np.int32(1)).__name__}): 1"
+        in captured.out
+    )
     assert "|   |-- Dataset: my_dataset" in captured.out
-    assert "|   |   |-- Datatype: int64" in captured.out
+    assert f"|   |   |-- Datatype: {type(np.int64(1)).__name__}" in captured.out
     assert "|   |   |-- Shape: (10,)" in captured.out
     assert (
         "|   |   |--   Attribute: dataset_attr (str): Dataset Attribute" in captured.out
     )
     assert (
-        "|   |   |--   Attribute: dataset_double_attr (float64): 3.14159"
+        f"|   |   |--   Attribute: dataset_double_attr ({type(np.float64(3.14159)).__name__}): 3.14159"
         in captured.out
     )

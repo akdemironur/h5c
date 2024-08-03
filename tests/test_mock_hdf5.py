@@ -12,7 +12,7 @@ def mock_hdf5_file(tmp_path):
         grp.attrs.create("my_attr", np.int64(1))
         grp.attrs.create("my_string_attr", "Hello, World!")
         grp.attrs.create("my_float_attr", np.float32(3.14))
-        grp.attrs.create("my_bool_attr", True)
+        grp.attrs.create("my_bool_attr", np.bool_(True))
         grp.attrs.create("my_double_attr", np.float64(2.71828))
 
         subgrp = grp.create_group("my_subgroup")
